@@ -37,9 +37,18 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    # ... apps por defecto de django
+    'rest_framework',
+    'corsheaders',
+    'drf_spectacular',
+    
+    # apps locales
+    'apps.dispensers', 
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -47,6 +56,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+# Next.js
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -83,6 +98,11 @@ DATABASES = {
         'HOST': os.environ.get('DB_HOST', 'localhost'),  # 'db' cuando corre en Docker, 'localhost' si lo corres local
         'PORT': '5432',
     }
+}
+
+# Configuración para que DRF genere la documentación Swagger automáticamente
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 
