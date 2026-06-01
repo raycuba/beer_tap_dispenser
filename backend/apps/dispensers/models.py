@@ -28,7 +28,7 @@ class DispenserUsage(models.Model):
         on_delete=models.CASCADE, 
         related_name='usages'
     )
-    opened_at = models.DateTimeField()
+    opened_at = models.DateTimeField(auto_now_add=True) # Registra la fecha de creacion
     # Quedará en null mientras el asistente tenga el grifo abierto sirviéndose
     closed_at = models.DateTimeField(null=True, blank=True)
     
