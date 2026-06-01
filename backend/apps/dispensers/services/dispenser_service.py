@@ -14,7 +14,8 @@ from .dispenser_exceptions import (
     DispenserAlreadyExistsError,
     DispenserNotFoundError,
     DispenserOperationNotAllowedError,
-    DispenserPermissionError
+    DispenserPermissionError,
+    DispenserUsageError
 )
 
 from ..infrastructure.exceptions import (
@@ -29,6 +30,17 @@ from ..infrastructure.exceptions import (
 
 # importa los repositorios utilizados aqui
 from ..infrastructure.dispenser_repository import DispenserRepository
+
+from .dispenserusage_exceptions import (
+    DispenserUsageValidationError,
+    DispenserUsageAlreadyExistsError,
+    DispenserUsageNotFoundError,
+    DispenserUsageOperationNotAllowedError,
+    DispenserUsagePermissionError
+)
+
+from .dispenserusage_service import DispenserUsageService
+from ..utils.timezone_now import timezone_now
 
 class DispenserService:
     """
@@ -176,6 +188,44 @@ class DispenserService:
             entity = self.repository.get_by_id(id=entity_id)
         except NotFoundError as e:
             raise DispenserNotFoundError(id=entity_id) from e
+        
+        # comprobar si no se esta cambiando realmente el estado del dispenser
+        if entity.status == status:
+            return entity.to_dict() # retornar la entidad existente sin guardar cambios
+        
+        # ejecutar operacion de open/close del dispenser
+        if entity.status == 'close' and status == 'open': # Si se esta abriendo el dispenser
+            # Crear una instancia de dispenser-usage
+            try:
+                dispenserUsageService = DispenserUsageService()
+                dispenserUsageService.create(data={'flow_volume': entity.flow_volume}, dispenser_id=entity.id)
+            except DispenserUsageValidationError as e:
+                raise DispenserValidationError(e.errors) from e
+            except DispenserUsageAlreadyExistsError as e:
+                raise DispenserAlreadyExistsError(field=e.field, detail=e.detail) from e
+            
+        elif entity.status == 'open' and status == 'close':
+            # Actualizar la instancia de dispenser-usage que no tenga fecha de cierre
+            try:
+                dispenserUsageService = DispenserUsageService()
+                # listar las instancias de dispenser-usage abiertas para este dispenser
+                open_usages = dispenserUsageService.list(filters={'dispenser_id': entity.id, 'closed_at': None})
+                
+                if not open_usages:
+                    raise DispenserUsageNotFoundError(detail=f"No open usage found for dispenser with id {entity.id}")
+                
+                open_usage = open_usages[0] # tomar la primera instancia abierta (en teoria solo deberia haber una)
+                
+                # actualizar la instancia
+                updates_usage=dispenserUsageService.update(entity_id=open_usage.get('id'), data={'closed_at': timezone_now()})
+                
+            except DispenserUsageValidationError as e:
+                raise DispenserValidationError(e.errors) from e
+            except DispenserUsageAlreadyExistsError as e:
+                raise DispenserAlreadyExistsError(field=e.field, detail=e.detail) from e
+        
+        else:
+            return entity.to_dict() # retornar la entidad existente sin guardar cambios
 
         # actualizar la instancia
         entity.update({'status': status})     

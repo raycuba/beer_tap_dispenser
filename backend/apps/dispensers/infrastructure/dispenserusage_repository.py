@@ -63,10 +63,13 @@ class DispenserUsageRepository:
             if filters is not None:
                 if not isinstance(filters, dict):
                     raise DispenserUsageValueError(field="filters", detail="filters must be dict or None")
-                if "dispenser_id" in filters and filters["dispenser_id"].strip():
+                if "dispenser_id" in filters and filters["dispenser_id"]:
                     instance_list = instance_list.filter(dispenser_id=filters["dispenser_id"])      
-                if "closed_at" in filters and filters["closed_at"].strip():
-                    instance_list = instance_list.filter(closed_at=filters["closed_at"])
+                if "closed_at" in filters:
+                    if filters["closed_at"] == 'null' or filters["closed_at"] == 'None' or filters["closed_at"] == '':
+                        instance_list = instance_list.filter(closed_at__isnull=True)
+                    else:
+                        instance_list = instance_list.filter(closed_at=filters["closed_at"])
 
             # Convertir a entidades usando el Mapper genérico
             return [Mapper.model_to_entity(instance, DispenserUsageEntity) for instance in instance_list]        
@@ -213,9 +216,6 @@ class DispenserUsageRepository:
 
         params: 
             entity: Entidad con los datos a actualizar (debe traer el id en los campos).
-            related_id: ID del padre si es necesario (opcional).
-            relations: Lista de IDs de entidades relacionadas (opcional).
-            adicionalData: Datos adicionales a incluir en la actualización.
         returns:
             La entidad guardada.
         raises: 
@@ -240,9 +240,9 @@ class DispenserUsageRepository:
             with transaction.atomic():
                 # Asegurar que todas las operaciones se realicen en una transacción
                 # Esto garantiza que si algo falla, no se guarden cambios parciales     
-                
+        
                 # Actualizar cada campo de la entidad en el modelo
-                Mapper.update_model_from_entity(instance, entity, excluded_fields=DispenserUsageEntity.Meta.special_readonly_and_protected_fields)           
+                Mapper.update_model_from_entity(instance, entity, excluded_fields=DispenserUsageEntity.Meta.special_readonly_and_protected_fields)   
 
                 instance.full_clean()  # Validaciones del modelo Django
                 instance.save()            

@@ -56,3 +56,9 @@ class DispenserPermissionError(DispenserError):
     def __init__(self, *args, **kwargs):
         msg = args[0] if args else "Permission not allowed in Dispenser."
         super().__init__(msg, **kwargs)
+        
+class DispenserUsageError(DispenserError):
+    """Cuando ocurre un error al acceder al usage."""
+    def __init__(self, *args, **kwargs):
+        msg = args[0] if args else "Error in operation with Usage in Dispenser."
+        super().__init__(msg, **kwargs)

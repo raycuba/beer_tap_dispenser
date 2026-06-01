@@ -162,6 +162,7 @@ class DispenserUsageService:
             ConnectionDataBaseError: Si ocurre un error al acceder a la base de datos.
             RepositoryError: Si ocurre un error inesperado (interno del sistema).
         """
+        
         # Validación de entrada
         if not entity_id:
             raise DispenserUsageValueError(field="id", detail="The id or uuid field is required")

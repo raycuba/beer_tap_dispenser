@@ -59,7 +59,7 @@ class DispenserEntity(BaseEntity):
         if not self.status or not self.status in DispenserEntity.STATUS_CHOICES:
             raise self.domain_value_error_class(field="status", detail=f"el status debe estar entre: {DispenserEntity.STATUS_CHOICES}")
 
-        if self.usages and not all(isinstance(x, int) for x in self.relations):
+        if self.usages and not all(isinstance(x, int) for x in self.usages):
             raise self.domain_value_error_class(field="usages", detail="usages debe ser una lista de enteros")  
 
         return self
