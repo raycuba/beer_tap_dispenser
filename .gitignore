@@ -1,0 +1,93 @@
+# ==============================================================================
+# PYTHON / DJANGO
+# ==============================================================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Environments (Entornos virtuales)
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Django local settings / media / static
+db.sqlite3
+db.sqlite3-journal
+local_settings.py
+staticfiles/
+media/
+
+# ==============================================================================
+# JAVASCRIPT / NODE / NEXT.JS
+# ==============================================================================
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Next.js build output
+.next/
+out/
+
+# Production logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Vercel deployment artifacts
+.vercel
+
+# ==============================================================================
+# CONFIGURACIONES DE ENTORNO Y SECRETOS (¡NUNCA SUBIR!)
+# ==============================================================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# ==============================================================================
+# EDITORES DE CÓDIGO Y SISTEMA OPERATIVO
+# ==============================================================================
+# VS Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# JetBrains (PyCharm, WebStorm)
+.idea/
+
+# Mac / Windows system files
+.DS_Store
+Thumbs.db
