@@ -17,23 +17,26 @@ class DispenserEntity(BaseEntity):
     con dispenser en el sistema.
     """
 
-    domain_value_error_class = DispenserValueError    
+    domain_value_error_class: ClassVar[type] = DispenserValueError    
 
     class Meta:
-        required_fields = {"flow_volume", "status"} # Requeridos para la creación
+        required_fields = {"flow_volume"} # Requeridos para la creación
         readonly_fields = {"id"} # Prohibidos siempre en creacion/actualizaciones
-        protected_fields = {} # Prohibidos en ciertas operaciones y actualizaciones
+        protected_fields = set() # Prohibidos en ciertas operaciones y actualizaciones
         special_update_fields = {"usages"} # Prohibidos en actualizaciones normales, requieren manejo especial
         readonly_and_protected_fields = readonly_fields.union(protected_fields)
+        readonly_and_special_fields = readonly_fields.union(special_update_fields)
+        special_readonly_and_protected_fields = special_update_fields.union(readonly_and_protected_fields)
         
-    STATUS_CHOICES = ['open', 'close',]
+        
+    STATUS_CHOICES: ClassVar[list[str]] = ['open', 'close',]
 
     # Identificadores
     id: Optional[UUID] = None  # ID relacionado con la base de datos
 
     # Atributos principales
     flow_volume: Optional[float] = None  # Litros por segundo que salen del grifo (ej: 0.064)
-    status: Optional[str] = None  # Estado actual del grifo
+    status: Optional[str] = 'close'  # Estado actual del grifo
 
     # Relaciones Many-to-Many o Reverse FK
     usages: Optional[List[int]] = None  # Lista de IDs de entidades relacionadas DispenserUsage

@@ -3,8 +3,7 @@
 
 from abc import ABC, abstractmethod
 from pydantic import BaseModel, ConfigDict, Field, validator, model_validator, field_validator
-from typing import Self, Dict, Any, Optional
-from typing import Dict, Any, Optional
+from typing import Self, Dict, Any, Optional, ClassVar
 from datetime import datetime
 from uuid import UUID
 
@@ -28,7 +27,7 @@ class BaseEntity(BaseModel, ABC):
     Representa la lógica de negocio central y las reglas asociadas.
     """   
 
-    domain_value_error_class = BaseDomainValueError    
+    domain_value_error_class: ClassVar[type] = BaseDomainValueError    
 
     class Meta:
         """

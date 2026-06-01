@@ -17,7 +17,7 @@ class DispenserUsageEntity(BaseEntity):
     con dispenserUsage en el sistema.
     """
 
-    domain_value_error_class = DispenserUsageValueError    
+    domain_value_error_class: ClassVar[type] = DispenserUsageValueError    
 
     class Meta:
         required_fields = {"dispenser_id"} # Requeridos para la creación
