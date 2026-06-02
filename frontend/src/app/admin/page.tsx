@@ -1,10 +1,16 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { dispenserService, Dispenser, TotalSpentResult } from '@/services/api';
+import { authService, AdminSession } from '@/services/auth';
 import Link from 'next/link';
 
 export default function AdminPage() {
+  const router = useRouter();
+  const [session, setSession] = useState<AdminSession | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [dispensers, setDispensers] = useState<Dispenser[]>([]);
   const [loading, setLoading] = useState(true);
   const [formLoading, setFormLoading] = useState(false);
@@ -15,6 +21,35 @@ export default function AdminPage() {
   const [spendingLoading, setSpendingLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
+
+  // Verificar autenticación al cargar
+  useEffect(() => {
+    const currentSession = authService.getCurrentSession();
+    if (!currentSession) {
+      router.push('/admin/login');
+    } else {
+      setSession(currentSession);
+      setAuthLoading(false);
+    }
+  }, [router]);
+
+  // Manejar logout
+  const handleLogout = () => {
+    authService.logout();
+    router.push('/admin/login');
+  };
+
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-900 text-white">
+        <div className="animate-spin rounded-full h-12 w-12 border border-amber-500 border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return null;
+  }
 
   // Cargar dispensadores al montar el componente
   useEffect(() => {
@@ -135,6 +170,30 @@ export default function AdminPage() {
           >
             ← Volver al Dashboard
           </Link>
+        </div>
+      </header>
+      {/* Header */}
+      <header className="bg-gray-800 border-b border-gray-700 p-6">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-amber-500">🍺 Administración de Grifos</h1>
+            <p className="text-gray-400 mt-1">Panel de control para gestionar los dispensadores del festival</p>
+            <p className="text-sm text-amber-400 mt-2">👤 Usuario: <span className="font-semibold">{session.username}</span></p>
+          </div>
+          <div className="flex gap-3">
+            <Link 
+              href="/" 
+              className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded font-medium transition-colors"
+            >
+              ← Dashboard
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded font-medium transition-colors"
+            >
+              🚪 Cerrar Sesión
+            </button>
+          </div>
         </div>
       </header>
 
