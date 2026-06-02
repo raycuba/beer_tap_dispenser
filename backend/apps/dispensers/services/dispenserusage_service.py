@@ -1,6 +1,8 @@
 
 from typing import List, Optional
 
+from ..utils.timezone_now import timezone_now
+
 # importa las entidades utilizadas aqui
 from ..domain.dispenserusage_entity import DispenserUsageEntity
 
@@ -189,6 +191,39 @@ class DispenserUsageService:
             raise DispenserUsageValidationError(e.errors) from e
 
         return updated_entity.to_dict()
+    
+
+    def get_total_spent_by_dispenser(self, dispenser_id: str) -> float:
+        """
+        Calcula el total gastado por un dispensador específico.
+
+        params:
+            dispenser_id: ID del dispensador para el cual se calculará el total gastado.
+        return: 
+            El total gastado por el dispensador.
+        raises:
+            DispenserUsageValueError: Si el valor de entrada no es válido.
+            ConnectionDataBaseError: Si ocurre un error al acceder a la base de datos.
+            RepositoryError: Si ocurre un error inesperado (interno del sistema).
+        """
+        # Validación de entrada
+        if not dispenser_id:
+            raise DispenserUsageValueError(field="dispenser_id", detail="The dispenser_id field is required")
+        
+        # obtener todas las instancias relacionadas con el dispensador
+        try:
+            dispenser_usages = self.repository.get_all(filters={"dispenser_id": dispenser_id})
+        except ValidationError as e:
+            raise DispenserUsageValueError(field="dispenser_id", detail="Invalid dispenser_id") from e
+        except ConnectionDataBaseError as e:
+            raise ConnectionDataBaseError(detail="Error connecting to the database") from e
+        except RepositoryError as e:
+            raise RepositoryError(detail="An unexpected error occurred in the repository") from e
+        
+        # calcular el total gastado sumando el gasto de cada uso
+        total_spent = sum(usage.total_spent(now=timezone_now()) for usage in dispenser_usages)
+
+        return total_spent
 
 
     def delete(self, entity_id: int = None) -> bool:

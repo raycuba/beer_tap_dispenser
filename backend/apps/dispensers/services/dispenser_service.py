@@ -252,6 +252,21 @@ class DispenserService:
             raise DispenserValidationError(e.errors) from e
 
         return updated_entity.to_dict()
+    
+    
+    def get_total_spent_by_dispenser(self, dispenser_id: str) -> float:
+        """
+        Calcula el total gastado por un dispensador específico.
+
+        params:
+            dispenser_id: ID del dispensador para el cual se calculará el total gastado.
+        return: 
+            El total gastado por el dispensador.
+        raises:
+            DispenserUsageValueError: Si el valor de entrada no es válido.
+        """
+        dispenserUsageService = DispenserUsageService()
+        return dispenserUsageService.get_total_spent_by_dispenser(dispenser_id=dispenser_id)
 
 
     def delete(self, entity_id: str = None) -> bool:
