@@ -237,7 +237,6 @@ class DispenserViewSet(ViewSet):
         - Valida y adapta los datos entrantes.
         - Llama al servicio `update_dispenser` para manejar la actualización.
         """
-        print(f"DispenserViewSet: Received update request for dispenser with id {pk} with data: {request.data}")
 
         # Datos enviados en el cuerpo de la solicitud
         serializer = ChangeDispenserSerializer(data=request.data) 
@@ -249,7 +248,6 @@ class DispenserViewSet(ViewSet):
         # Obtener el status
         status_q = data.get('status', None)
         updated_at_q = data.get('updated_at', None)
-        print(f"DispenserViewSet: Validated data for update - status: {status_q}, updated_at: {updated_at_q}")
         
         # Validar que el status sea 'open' o 'close' y que updated_at esté presente y sea una fecha válida
         if status_q is None or not status_q in ['open', 'close']:
@@ -261,9 +259,7 @@ class DispenserViewSet(ViewSet):
 
         try:
             # Llamar al servicio para actualizar el registro
-            print(f"DispenserViewSet: Attempting to update dispenser with id {pk} to status '{status_q}' at {updated_at_q}")
             dispenser = dispenserService.update(entity_id=pk, status=status_q, updated_at=updated_at_q)
-            print(f"DispenserViewSet: Successfully updated dispenser with id {pk} dispenser: {dispenser}")
 
             # Serializar el registro actualizado
             response_serializer = DispenserDTOSerializer(dispenser)          
@@ -353,6 +349,9 @@ class DispenserViewSet(ViewSet):
             })
             response_serializer.is_valid(raise_exception=True)
             return Response(response_serializer.data, status=status.HTTP_200_OK)
+        except DispenserNotFoundError as e:
+            # Manejar errores si no se encuentra el registro con el ID dado
+            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)        
         except (DispenserValueError, DispenserUsageValueError) as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except (ConnectionDataBaseError, RepositoryError) as e:

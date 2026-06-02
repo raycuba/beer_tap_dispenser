@@ -178,7 +178,6 @@ class DispenserService:
             ConnectionDataBaseError: Si ocurre un error al acceder a la base de datos.
             RepositoryError: Si ocurre un error inesperado (interno del sistema).
         """
-        print(f"DispenserService.update called with entity_id={entity_id}, status={status}, updated_at={updated_at}")
         # Validación de entrada
         if not entity_id:
             raise DispenserValueError(field="id", detail="The id or uuid field is required")
@@ -209,7 +208,6 @@ class DispenserService:
         # ejecutar operacion de open/close del dispenser
         if entity.status == 'close' and status == 'open': # Si se esta abriendo el dispenser
             # Crear una instancia de dispenser-usage
-            print(f"DispenserService: Creating a new DispenserUsage for dispenser with id {entity.id} at {updated_at.isoformat()}")
             try:
                 dispenserUsageService = DispenserUsageService()
                 # listar las instancias de dispenser-usage abiertas para este dispenser
@@ -226,7 +224,6 @@ class DispenserService:
             
         elif entity.status == 'open' and status == 'close':
             # Actualizar la instancia de dispenser-usage que no tenga fecha de cierre
-            print(f"DispenserService: Closing the open DispenserUsage for dispenser with id {entity.id} at {updated_at.isoformat()}")
             try:
                 dispenserUsageService = DispenserUsageService()
                 # listar las instancias de dispenser-usage abiertas para este dispenser
@@ -246,7 +243,6 @@ class DispenserService:
                 raise DispenserAlreadyExistsError(field=e.field, detail=e.detail) from e
         
         else:
-            print(f"DispenserService: Changing status from '{entity.status}' to '{status}' is not allowed")
             raise DispenserOperationNotAllowedError(operation_name=f"Changing status from {entity.status} to '{status}' is not allowed")
 
         # actualizar la instancia
@@ -274,8 +270,29 @@ class DispenserService:
         raises:
             DispenserUsageValueError: Si el valor de entrada no es válido.
         """
+        
+        # Recuperar la entidad de dispenser para validar que exista
+        try:
+            entity = self.repository.get_by_id(id=dispenser_id)
+        except NotFoundError as e:
+            raise DispenserNotFoundError(id=dispenser_id) from e
+                
         dispenserUsageService = DispenserUsageService()
-        return dispenserUsageService.get_total_spent_by_dispenser(dispenser_id=dispenser_id)
+        try:
+            totalSpentResultDto = dispenserUsageService.get_total_spent_by_dispenser(dispenser_id=dispenser_id)
+            
+        except DispenserUsageValidationError as e:
+            raise DispenserValidationError(e.errors) from e
+        except DispenserUsageNotFoundError as e:
+            raise DispenserNotFoundError(id=dispenser_id) from e
+        except DispenserUsageOperationNotAllowedError as e:
+            raise DispenserOperationNotAllowedError(operation_name=e.operation_name) from e
+        except DispenserUsagePermissionError as e:
+            raise DispenserPermissionError(permission_name=e.permission_name) from e
+        except DispenserUsageError as e:
+            raise DispenserUsageError(detail=e.detail) from e
+        
+        return totalSpentResultDto
 
 
     def delete(self, entity_id: str = None) -> bool:
