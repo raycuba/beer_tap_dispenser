@@ -10,18 +10,28 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loadError, setLoadError] = useState<string>('');
 
   // Cargar dispensadores al montar el componente
   useEffect(() => {
-    dispenserService.getAll()
-      .then(data => {
+    const loadDispensers = async () => {
+      try {
+        setLoading(true);
+        setLoadError('');
+        console.log('Intentando obtener dispensadores...');
+        const data = await dispenserService.getAll();
+        console.log('Dispensadores obtenidos:', data);
         setDispensers(data);
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
+        console.error('Error al cargar dispensadores:', errorMsg);
+        setLoadError(errorMsg);
+      } finally {
         setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
+      }
+    };
+
+    loadDispensers();
   }, []);
 
   // Manejar cambio de estado (abrir/cerrar)
@@ -59,7 +69,41 @@ export default function Home() {
   };
 
   if (loading) {
-    return <div className="flex h-screen items-center justify-center text-xl">Cargando grifos...</div>;
+    return (
+      <div className="flex h-screen flex-col items-center justify-center text-xl bg-gray-900 text-white">
+        <div className="animate-spin rounded-full h-12 w-12 border border-amber-500 border-t-transparent mb-4"></div>
+        <p>Cargando grifos...</p>
+        <p className="text-sm text-gray-400 mt-2">(API: {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'})</p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center bg-gray-900 text-white p-8">
+        <div className="max-w-md">
+          <p className="text-3xl mb-4">❌</p>
+          <h1 className="text-2xl font-bold mb-4">Error al conectar con la API</h1>
+          <div className="bg-red-500/10 border border-red-500 text-red-400 p-4 rounded mb-6">
+            <p className="text-sm">{loadError}</p>
+          </div>
+          <div className="bg-gray-800 p-4 rounded mb-6 text-sm text-gray-300">
+            <p className="font-semibold mb-2">Información de depuración:</p>
+            <ul className="space-y-1">
+              <li>• API URL: <code className="bg-gray-700 px-2 py-1 rounded">{process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}</code></li>
+              <li>• Endpoint: <code className="bg-gray-700 px-2 py-1 rounded">/api/dispensers/</code></li>
+              <li>• Verifica que el backend Django esté ejecutándose</li>
+            </ul>
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded font-medium transition-colors"
+          >
+            🔄 Reintentar
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (

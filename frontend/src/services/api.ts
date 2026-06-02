@@ -45,8 +45,14 @@ export const dispenserService = {
       cache: 'no-store', // Evita caché para obtener datos en tiempo real
     });
     if (!res.ok) {
-      const error = await res.json().catch(() => ({}));
-      throw new Error(error.error || `Error al obtener dispensadores: ${res.status}`);
+      let errorMsg = `HTTP ${res.status}`;
+      try {
+        const error = await res.json();
+        errorMsg = error.error || errorMsg;
+      } catch {
+        // Si no se puede parsear JSON, usar el mensaje genérico
+      }
+      throw new Error(`Error al obtener dispensadores: ${errorMsg}. Asegúrate de que el backend esté corriendo en ${API_BASE_URL}`);
     }
     return res.json();
   },
