@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { dispenserService, Dispenser } from '@/services/api';
+import Link from 'next/link';
 
 export default function Home() {
   const [dispensers, setDispensers] = useState<Dispenser[]>([]);
@@ -64,7 +65,15 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gray-900 p-8 text-white">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-amber-500">🍺 Beer Tap Festival Dashboard</h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-amber-500">🍺 Beer Tap Festival Dashboard</h1>
+          <Link
+            href="/admin"
+            className="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded font-medium transition-colors"
+          >
+            ⚙️ Panel de Admin
+          </Link>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {dispensers.length === 0 ? (

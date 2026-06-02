@@ -17,12 +17,12 @@ export interface DispenserUsage {
   dispenser_id: string;
   opened_at: string; // ISO timestamp
   closed_at?: string; // ISO timestamp nullable
-  amount?: number;
+  amount?: number | string; // El backend retorna como Decimal (string) para mantener precisión
 }
 
 export interface TotalSpentResult {
   dispenser_id: string;
-  total_spent: number;
+  total_spent: number | string; // El backend retorna como Decimal (string) para mantener precisión
   usages: DispenserUsage[];
 }
 
