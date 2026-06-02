@@ -1,5 +1,6 @@
 
 from typing import List, Optional
+from datetime import datetime
 
 # importa las entidades utilizadas aqui
 from ..domain.dispenser_entity import DispenserEntity
@@ -157,13 +158,14 @@ class DispenserService:
         return entity.to_dict()
 
 
-    def update(self, entity_id: str = None, status = None) -> dict:
+    def update(self, entity_id: str = None, status: str = None, updated_at: str = None) -> dict:
         """
         Actualiza una instancia existente de dispenser.
 
         params:
             entity_id: ID de la instancia a actualizar.
             status: Estado actual del grifo
+            updated_at: Fecha de la actualizacion
         return: 
             La entidad actualizada.
         raises: 
@@ -173,6 +175,7 @@ class DispenserService:
             ConnectionDataBaseError: Si ocurre un error al acceder a la base de datos.
             RepositoryError: Si ocurre un error inesperado (interno del sistema).
         """
+        print(f"DispenserService.update called with entity_id={entity_id}, status={status}, updated_at={updated_at}")
         # Validación de entrada
         if not entity_id:
             raise DispenserValueError(field="id", detail="The id or uuid field is required")
@@ -182,6 +185,11 @@ class DispenserService:
         
         if not status in DispenserEntity.STATUS_CHOICES:
             raise DispenserValueError(field="status", detail=f"The status field must be in {DispenserEntity.STATUS_CHOICES}")
+        
+        try:
+            updated_at = datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
+        except ValueError as e:
+            raise DispenserValueError(field="updated_at", detail=f"Invalid updated_at datetime format")
 
         # Recuperar la entidad
         try:
@@ -189,16 +197,19 @@ class DispenserService:
         except NotFoundError as e:
             raise DispenserNotFoundError(id=entity_id) from e
         
-        # comprobar si no se esta cambiando realmente el estado del dispenser
-        if entity.status == status:
-            return entity.to_dict() # retornar la entidad existente sin guardar cambios
-        
         # ejecutar operacion de open/close del dispenser
         if entity.status == 'close' and status == 'open': # Si se esta abriendo el dispenser
             # Crear una instancia de dispenser-usage
+            print(f"DispenserService: Creating a new DispenserUsage for dispenser with id {entity.id} at {updated_at.isoformat()}")
             try:
                 dispenserUsageService = DispenserUsageService()
-                dispenserUsageService.create(data={'flow_volume': entity.flow_volume}, dispenser_id=entity.id)
+                # listar las instancias de dispenser-usage abiertas para este dispenser
+                open_usages = dispenserUsageService.list(filters={'dispenser_id': entity.id, 'closed_at': None})
+                
+                if open_usages:
+                    raise DispenserUsageOperationNotAllowedError(operation_name=f"An open usage found for dispenser with id {entity.id}")
+                
+                dispenserUsageService.create(data={'flow_volume': entity.flow_volume, 'opened_at': updated_at}, dispenser_id=entity.id)
             except DispenserUsageValidationError as e:
                 raise DispenserValidationError(e.errors) from e
             except DispenserUsageAlreadyExistsError as e:
@@ -206,18 +217,19 @@ class DispenserService:
             
         elif entity.status == 'open' and status == 'close':
             # Actualizar la instancia de dispenser-usage que no tenga fecha de cierre
+            print(f"DispenserService: Closing the open DispenserUsage for dispenser with id {entity.id} at {updated_at.isoformat()}")
             try:
                 dispenserUsageService = DispenserUsageService()
                 # listar las instancias de dispenser-usage abiertas para este dispenser
                 open_usages = dispenserUsageService.list(filters={'dispenser_id': entity.id, 'closed_at': None})
                 
                 if not open_usages:
-                    raise DispenserUsageNotFoundError(detail=f"No open usage found for dispenser with id {entity.id}")
+                    raise DispenserUsageOperationNotAllowedError(operation_name=f"No open usage found for dispenser with id {entity.id}")
                 
                 open_usage = open_usages[0] # tomar la primera instancia abierta (en teoria solo deberia haber una)
                 
                 # actualizar la instancia
-                updates_usage=dispenserUsageService.update(entity_id=open_usage.get('id'), data={'closed_at': timezone_now()})
+                updates_usage=dispenserUsageService.update(entity_id=open_usage.get('id'), data={'closed_at': updated_at})
                 
             except DispenserUsageValidationError as e:
                 raise DispenserValidationError(e.errors) from e
@@ -225,7 +237,8 @@ class DispenserService:
                 raise DispenserAlreadyExistsError(field=e.field, detail=e.detail) from e
         
         else:
-            return entity.to_dict() # retornar la entidad existente sin guardar cambios
+            print(f"DispenserService: Changing status from '{entity.status}' to '{status}' is not allowed")
+            raise DispenserOperationNotAllowedError(operation_name=f"Changing status from {entity.status} to '{status}' is not allowed")
 
         # actualizar la instancia
         entity.update({'status': status})     

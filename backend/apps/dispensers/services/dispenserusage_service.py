@@ -178,6 +178,7 @@ class DispenserUsageService:
 
         # actualizar la instancia
         entity.update(data)     
+        print(f"DispenserUsageService.Entity updated: {entity}")
 
         # Guardar en el repositorio
         try:

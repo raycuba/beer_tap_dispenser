@@ -21,7 +21,7 @@ class DispenserUsageEntity(BaseEntity):
 
     class Meta:
         required_fields = {"flow_volume"} # Requeridos para la creación
-        readonly_fields = {"id", "opened_at"} # Prohibidos siempre en creacion/actualizaciones
+        readonly_fields = {"id"} # Prohibidos siempre en creacion/actualizaciones
         protected_fields = {"dispenser_id"} # Prohibidos en ciertas operaciones y actualizaciones
         special_update_fields = {"flow_volume"} # Prohibidos en actualizaciones normales, requieren manejo especial
         readonly_and_protected_fields = readonly_fields.union(protected_fields)
