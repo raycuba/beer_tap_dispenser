@@ -24,6 +24,19 @@ class ChangeDispenserSerializer(serializers.Serializer):
     updated_at = serializers.DateTimeField(required=True, help_text="Fecha y hora de la última actualización del dispenser en formato ISO 8601 (ej: 2023-01-01T12:00:00Z)")
     
     
+class UsageItemSerializer(serializers.Serializer):
+    flow_volume = serializers.FloatField(required=False, allow_null=True)
+    opened_at = serializers.DateTimeField(required=False, allow_null=True)
+    closed_at = serializers.DateTimeField(required=False, allow_null=True)
+    total_spent = serializers.DecimalField(max_digits=20, decimal_places=6, required=False, allow_null=True)
+
+
+class TotalSpentResultSerializer(serializers.Serializer):
+    dispenser_id = serializers.UUIDField(help_text="ID del dispensador")
+    total_spent = serializers.DecimalField(max_digits=20, decimal_places=6, help_text="Total gastado por el dispensador")
+    usages = UsageItemSerializer(many=True, required=False)
+
+
 class DispenserDTOSerializer(serializers.Serializer):
     """
     Serializer Object para dispenser.

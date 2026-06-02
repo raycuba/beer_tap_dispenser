@@ -12,7 +12,8 @@ from .serializers.dispenser_serializer import (
     DispenserDTOSerializer,
     CreateDispenserSerializer,
     CreateDispenserResultSerializer,
-    ChangeDispenserSerializer
+    ChangeDispenserSerializer,
+    TotalSpentResultSerializer,
 )
 
 # importa las excepciones personalizadas
@@ -345,10 +346,13 @@ class DispenserViewSet(ViewSet):
 
         try:
             total_spent_dto = dispenserService.get_total_spent_by_dispenser(dispenser_id=pk)
-            return Response(
-                {"dispenser_id": pk, "total_spent": total_spent_dto.amount, "usages": [usage.to_dict() for usage in total_spent_dto.usages]},
-                status=status.HTTP_200_OK
-            )
+            response_serializer = TotalSpentResultSerializer(data={
+                "dispenser_id": pk,
+                "total_spent": total_spent_dto.amount,
+                "usages": [usage.to_dict() for usage in (total_spent_dto.usages or [])],
+            })
+            response_serializer.is_valid(raise_exception=True)
+            return Response(response_serializer.data, status=status.HTTP_200_OK)
         except (DispenserValueError, DispenserUsageValueError) as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except (ConnectionDataBaseError, RepositoryError) as e:
