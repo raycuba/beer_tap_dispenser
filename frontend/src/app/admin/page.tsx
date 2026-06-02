@@ -209,8 +209,8 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700">
-                  {dispensers.map((dispenser) => (
-                    <tr key={dispenser.id} className="hover:bg-gray-700/50 transition-colors">
+                  {dispensers.map((dispenser, index) => (
+                    <tr key={`${dispenser.id}-${index}`} className="hover:bg-gray-700/50 transition-colors">
                       <td className="px-4 py-3 text-sm font-mono text-gray-300 truncate max-w-xs">{dispenser.id}</td>
                       <td className="px-4 py-3 text-sm text-amber-400 font-mono">{dispenser.flow_volume}</td>
                       <td className="px-4 py-3 text-sm">
@@ -277,8 +277,8 @@ export default function AdminPage() {
                   <h4 className="text-lg font-semibold text-gray-300 mb-4">Historial de Uso</h4>
                   {spendingData.usages && spendingData.usages.length > 0 ? (
                     <div className="space-y-3">
-                      {spendingData.usages.map((usage) => (
-                        <div key={usage.id} className="bg-gray-700/50 p-3 rounded border border-gray-600">
+                      {spendingData.usages.map((usage, index) => (
+                        <div key={`${usage.id}-${usage.opened_at}-${index}`} className="bg-gray-700/50 p-3 rounded border border-gray-600">
                           <div className="flex justify-between items-start">
                             <div>
                               <p className="text-sm text-gray-400">
