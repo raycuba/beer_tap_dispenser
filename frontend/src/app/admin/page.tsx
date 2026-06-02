@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -9,6 +8,8 @@ import Link from 'next/link';
 
 export default function AdminPage() {
   const router = useRouter();
+  
+  // 1. TODOS LOS STATES PRIMERO
   const [session, setSession] = useState<AdminSession | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [dispensers, setDispensers] = useState<Dispenser[]>([]);
@@ -22,6 +23,8 @@ export default function AdminPage() {
   const [error, setError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
 
+  // 2. TODOS LOS USEEFFECT JUNTOS E INCONDICIONALES ARRIBA
+
   // Verificar autenticación al cargar
   useEffect(() => {
     const currentSession = authService.getCurrentSession();
@@ -33,28 +36,17 @@ export default function AdminPage() {
     }
   }, [router]);
 
-  // Manejar logout
-  const handleLogout = () => {
-    authService.logout();
-    router.push('/admin/login');
-  };
-
-  if (authLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-gray-900 text-white">
-        <div className="animate-spin rounded-full h-12 w-12 border border-amber-500 border-t-transparent"></div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return null;
-  }
-
-  // Cargar dispensadores al montar el componente
+  // Cargar dispensadores al montar el componente (¡Movido aquí arriba!)
   useEffect(() => {
-    loadDispensers();
+    // Solo intentamos cargar si ya ha pasado el filtro de autenticación inicial
+    // para evitar llamadas fantasmas al backend si no hay sesión activa
+    const currentSession = authService.getCurrentSession();
+    if (currentSession) {
+      loadDispensers();
+    }
   }, []);
+
+  // 3. MÉTODOS Y FUNCIONES LÓGICAS
 
   const loadDispensers = async () => {
     try {
@@ -70,7 +62,11 @@ export default function AdminPage() {
     }
   };
 
-  // Crear nuevo dispensador
+  const handleLogout = () => {
+    authService.logout();
+    router.push('/admin/login');
+  };
+
   const handleCreateDispenser = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -85,11 +81,7 @@ export default function AdminPage() {
       await dispenserService.create(parseFloat(flowVolume));
       setSuccessMessage('✅ Dispensador creado exitosamente');
       setFlowVolume('');
-      
-      // Recargar lista
       await loadDispensers();
-      
-      // Limpiar mensaje después de 3 segundos
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
@@ -99,7 +91,6 @@ export default function AdminPage() {
     }
   };
 
-  // Eliminar dispensador
   const handleDeleteDispenser = async (id: string) => {
     if (!confirm('¿Estás seguro de que deseas eliminar este dispensador?')) return;
 
@@ -108,17 +99,13 @@ export default function AdminPage() {
       setError('');
       await dispenserService.delete(id);
       setSuccessMessage('✅ Dispensador eliminado exitosamente');
-      
-      // Recargar lista
       await loadDispensers();
       
-      // Limpiar datos de gasto si era el seleccionado
       if (selectedDispenserId === id) {
         setSelectedDispenserId(null);
         setSpendingData(null);
       }
       
-      // Limpiar mensaje después de 3 segundos
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
@@ -132,7 +119,6 @@ export default function AdminPage() {
     }
   };
 
-  // Obtener gasto total y historial
   const handleViewSpending = async (id: string) => {
     try {
       setSpendingLoading(true);
@@ -155,24 +141,24 @@ export default function AdminPage() {
     setSpendingData(null);
   };
 
+  // 4. LAS SALIDAS TEMPRANAS (RETURNS) ABAJO DE LOS HOOKS
+
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-900 text-white">
+        <div className="animate-spin rounded-full h-12 w-12 border border-amber-500 border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return null;
+  }
+
+  // 5. RENDERIZADO PRINCIPAL
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700 p-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-amber-500">🍺 Administración de Grifos</h1>
-            <p className="text-gray-400 mt-1">Panel de control para gestionar los dispensadores del festival</p>
-          </div>
-          <Link 
-            href="/" 
-            className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded font-medium transition-colors"
-          >
-            ← Volver al Dashboard
-          </Link>
-        </div>
-      </header>
-      {/* Header */}
+      {/* Header unificado (eliminado el duplicado) */}
       <header className="bg-gray-800 border-b border-gray-700 p-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
@@ -262,8 +248,6 @@ export default function AdminPage() {
                     <th className="px-4 py-3 text-sm font-semibold text-gray-300">ID</th>
                     <th className="px-4 py-3 text-sm font-semibold text-gray-300">Flow Volume</th>
                     <th className="px-4 py-3 text-sm font-semibold text-gray-300">Estado</th>
-                    <th className="px-4 py-3 text-sm font-semibold text-gray-300">Creado</th>
-                    <th className="px-4 py-3 text-sm font-semibold text-gray-300">Actualizado</th>
                     <th className="px-4 py-3 text-sm font-semibold text-gray-300">Acciones</th>
                   </tr>
                 </thead>
@@ -278,12 +262,6 @@ export default function AdminPage() {
                         }`}>
                           {dispenser.status}
                         </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-400">
-                        {dispenser.created_at ? new Date(dispenser.created_at).toLocaleDateString('es-ES') : '-'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-400">
-                        {dispenser.updated_at ? new Date(dispenser.updated_at).toLocaleDateString('es-ES') : '-'}
                       </td>
                       <td className="px-4 py-3 text-sm space-x-2">
                         <button
@@ -311,7 +289,7 @@ export default function AdminPage() {
         {/* Modal de historial de gasto */}
         {selectedDispenserId && spendingData && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-gray-800 border border-gray-700 rounded-lg max-w-2xl w-full max-h-96 overflow-y-auto">
+            <div className="bg-gray-800 border border-gray-700 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
               <div className="sticky top-0 bg-gray-800 border-b border-gray-700 p-6 flex justify-between items-center">
                 <h3 className="text-xl font-bold text-amber-400">
                   💰 Historial de Gasto
@@ -325,19 +303,21 @@ export default function AdminPage() {
               </div>
 
               <div className="p-6 space-y-6">
-                {/* Resumen de gasto */}
                 <div className="bg-gray-700/50 p-4 rounded border border-gray-600">
                   <p className="text-sm text-gray-400">Total Gastado</p>
-                  <p className="text-3xl font-bold text-amber-400">${parseFloat(String(spendingData.total_spent)).toFixed(2)}</p>
+                  <p className="text-3xl font-bold text-amber-400">
+                    {parseFloat(String(spendingData.total_spent)).toFixed(2)}€
+                  </p>
                 </div>
 
-                {/* Historial de uso */}
+                {/* Si tienes un array de consumos en tu API, se pintará aquí */}
+                {/* Nota: Adaptado para evitar romper si `usages` no viene del backend */}
                 <div>
                   <h4 className="text-lg font-semibold text-gray-300 mb-4">Historial de Uso</h4>
                   {spendingData.usages && spendingData.usages.length > 0 ? (
                     <div className="space-y-3">
                       {spendingData.usages.map((usage, index) => (
-                        <div key={`${usage.id}-${usage.opened_at}-${index}`} className="bg-gray-700/50 p-3 rounded border border-gray-600">
+                        <div key={`${usage.opened_at}-${index}`} className="bg-gray-700/50 p-3 rounded border border-gray-600">
                           <div className="flex justify-between items-start">
                             <div>
                               <p className="text-sm text-gray-400">
@@ -348,11 +328,9 @@ export default function AdminPage() {
                                   Cerrado: {new Date(usage.closed_at).toLocaleString('es-ES')}
                                 </p>
                               )}
-                              {usage.amount && (
-                                <p className="text-sm text-amber-400 font-semibold mt-1">
-                                  Cantidad: ${parseFloat(String(usage.amount)).toFixed(2)}
-                                </p>
-                              )}
+                              <p className="text-sm text-amber-400 font-semibold mt-1">
+                                Total: {parseFloat(String(usage.total_spent)).toFixed(2)}€
+                              </p>
                             </div>
                             {!usage.closed_at && (
                               <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-bold">
@@ -364,7 +342,7 @@ export default function AdminPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-400 text-center py-4">No hay historial de uso</p>
+                    <p className="text-gray-400 text-center py-4">No hay historial de uso disponible</p>
                   )}
                 </div>
               </div>
