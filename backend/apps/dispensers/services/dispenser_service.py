@@ -186,10 +186,16 @@ class DispenserService:
         if not status in DispenserEntity.STATUS_CHOICES:
             raise DispenserValueError(field="status", detail=f"The status field must be in {DispenserEntity.STATUS_CHOICES}")
         
-        try:
-            updated_at = datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
-        except ValueError as e:
-            raise DispenserValueError(field="updated_at", detail=f"Invalid updated_at datetime format")
+        if not updated_at:
+            raise DispenserValueError(field="updated_at", detail="The updated_at field is required")
+
+        if isinstance(updated_at, str):
+            try:
+                updated_at = datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
+            except ValueError as e:
+                raise DispenserValueError(field="updated_at", detail="Invalid updated_at datetime format") from e
+        elif not isinstance(updated_at, datetime):
+            raise DispenserValueError(field="updated_at", detail="The updated_at field must be a valid datetime or ISO 8601 string")
 
         # Recuperar la entidad
         try:

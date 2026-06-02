@@ -250,7 +250,7 @@ class DispenserViewSet(ViewSet):
         # Validar que el status sea 'open' o 'close' y que updated_at esté presente y sea una fecha válida
         if status_q is None or not status_q in ['open', 'close']:
             return Response({"error": "status is required and must be either 'open' or 'close'"}, status=status.HTTP_400_BAD_REQUEST)
-        if updated_at_q is None or not isinstance(updated_at_q, str) or not is_valid_utc_z(updated_at_q):
+        if updated_at_q is None:
             return Response({"error": "updated_at is required and must be a valid utc date string"}, status=status.HTTP_400_BAD_REQUEST)
                          
         dispenserService = DispenserService() # Instanciar el servicio
