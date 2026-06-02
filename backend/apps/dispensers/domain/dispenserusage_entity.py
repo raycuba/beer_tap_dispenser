@@ -34,7 +34,7 @@ class DispenserUsageEntity(BaseEntity):
     dispenser_id: Optional[UUID] = None  # UUID del dispensador relacionado
     
     # Atributos principales
-    flow_volume: Optional[float] = None  # copia estática del flow_volume en el momento de la apertura
+    flow_volume: Optional[float] = None  # copia estática del flow_volume en el momento de la apertura  (Litros por segundo que salen del grifo (ej: 0.064))
     opened_at: Optional[datetime] = None
     closed_at: Optional[datetime] = None
 
