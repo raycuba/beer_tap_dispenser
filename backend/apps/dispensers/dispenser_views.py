@@ -270,6 +270,12 @@ class DispenserViewSet(ViewSet):
         except DispenserNotFoundError as e:
             # Manejar errores si no se encuentra el registro con el ID dado
             return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+        except DispenserPermissionError as e:
+            # Manejar errores de permisos si el usuario no tiene acceso para actualizar el registro
+            return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except DispenserOperationNotAllowedError as e:
+            # Manejar errores si la operación no está permitida (por ejemplo, intentar abrir un dispenser que ya está abierto)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except (DispenserValueError, DispenserValidationError) as e:
             # Manejar errores de validación si los datos no son válidos
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
