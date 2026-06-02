@@ -19,6 +19,9 @@ from .serializers.dispenser_serializer import (
 from .domain.dispenser_exceptions import (
     DispenserValueError,
 )
+from .domain.dispenserusage_exceptions import (
+    DispenserUsageValueError,
+)
 
 from .services.dispenser_exceptions import (
     DispenserValidationError,
@@ -335,5 +338,23 @@ class DispenserViewSet(ViewSet):
         tags=["dispensers"]
     )
     def get_total_spent_by_dispenser(self, request, pk: str = None):
-        pass
+        """
+        Endpoint para obtener el total gastado por un dispenser específico.
+        """
+        dispenserService = DispenserService()
+
+        try:
+            total_spent_dto = dispenserService.get_total_spent_by_dispenser(dispenser_id=pk)
+            return Response(
+                {"dispenser_id": pk, "total_spent": total_spent_dto.amount, "usages": [usage.to_dict() for usage in total_spent_dto.usages]},
+                status=status.HTTP_200_OK
+            )
+        except (DispenserValueError, DispenserUsageValueError) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except (ConnectionDataBaseError, RepositoryError) as e:
+            return Response({"error": "Database or repository error: " + str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response({"error": "Unexpected error: " + str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        
 

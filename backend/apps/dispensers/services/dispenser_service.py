@@ -43,6 +43,9 @@ from .dispenserusage_exceptions import (
 from .dispenserusage_service import DispenserUsageService
 from ..utils.timezone_now import timezone_now
 
+# importa los DTOs utilizados aqui
+from ..dtos import TotalSpentResultDto, UsageItemDTO
+
 class DispenserService:
     """
     Servicio para manejar las operaciones CRUD relacionadas con dispenser.
@@ -260,14 +263,14 @@ class DispenserService:
         return updated_entity.to_dict()
     
     
-    def get_total_spent_by_dispenser(self, dispenser_id: str) -> float:
+    def get_total_spent_by_dispenser(self, dispenser_id: str) -> TotalSpentResultDto:
         """
         Calcula el total gastado por un dispensador específico.
 
         params:
             dispenser_id: ID del dispensador para el cual se calculará el total gastado.
         return: 
-            El total gastado por el dispensador.
+            TotalSpentResultDto con el monto total gastado y la lista de usos relacionados.
         raises:
             DispenserUsageValueError: Si el valor de entrada no es válido.
         """

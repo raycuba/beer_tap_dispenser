@@ -1,4 +1,5 @@
 
+from decimal import Decimal
 from typing import List, Optional
 
 from ..utils.timezone_now import timezone_now
@@ -31,6 +32,9 @@ from ..infrastructure.exceptions import (
 
 # importa los repositorios utilizados aqui
 from ..infrastructure.dispenserusage_repository import DispenserUsageRepository
+
+# importa los DTOs utilizados aqui
+from ..dtos import TotalSpentResultDto, UsageItemDTO
 
 class DispenserUsageService:
     """
@@ -193,19 +197,20 @@ class DispenserUsageService:
         return updated_entity.to_dict()
     
 
-    def get_total_spent_by_dispenser(self, dispenser_id: str) -> float:
+    def get_total_spent_by_dispenser(self, dispenser_id: str) -> TotalSpentResultDto:
         """
         Calcula el total gastado por un dispensador específico.
 
         params:
             dispenser_id: ID del dispensador para el cual se calculará el total gastado.
         return: 
-            El total gastado por el dispensador.
+            TotalSpentResultDto con el monto total gastado y la lista de usos relacionados.
         raises:
             DispenserUsageValueError: Si el valor de entrada no es válido.
             ConnectionDataBaseError: Si ocurre un error al acceder a la base de datos.
             RepositoryError: Si ocurre un error inesperado (interno del sistema).
         """
+        
         # Validación de entrada
         if not dispenser_id:
             raise DispenserUsageValueError(field="dispenser_id", detail="The dispenser_id field is required")
@@ -221,9 +226,20 @@ class DispenserUsageService:
             raise RepositoryError(detail="An unexpected error occurred in the repository") from e
         
         # calcular el total gastado sumando el gasto de cada uso
-        total_spent = sum(usage.total_spent(now=timezone_now()) for usage in dispenser_usages)
+        total_spent = Decimal(0)
+        usage_items = []
+        for usage in dispenser_usages:
+            usageItem = UsageItemDTO(
+                id=usage.id,
+                flow_volume=usage.flow_volume,
+                opened_at=usage.opened_at,
+                closed_at=usage.closed_at,
+                total_spent=usage.total_spent(now=timezone_now())
+            )
+            usage_items.append(usageItem)
+            total_spent += usageItem.total_spent if usageItem.total_spent else Decimal(0)
 
-        return total_spent
+        return TotalSpentResultDto(amount=Decimal(total_spent), usages=usage_items)
 
 
     def delete(self, entity_id: int = None) -> bool:
