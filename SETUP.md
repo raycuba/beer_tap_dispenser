@@ -1,10 +1,9 @@
 # 🍺 Beer Tap Dispenser - Guía de Inicio
 
 ## Requisitos previos
-
-- **Backend**: Python 3.9+, Django
+- **Backend**: Python 3.8.12, Django
 - **Frontend**: Node.js 18+, npm/yarn
-- **Base de datos**: SQLite (incluida)
+- **Base de datos**: postgres:15-alpine (incluida)
 
 ---
 
@@ -17,9 +16,7 @@
 cd backend
 
 # Activar el entorno virtual
-source venv/bin/activate  # Linux/Mac
-# o
-venv\Scripts\activate  # Windows
+source ../.venv/bin/activate
 
 # Instalar dependencias
 pip install -r requirements.txt
@@ -31,7 +28,12 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-El backend estará disponible en: **http://localhost:8000**
+El backend estará disponible en:
+Documentacion de la API en: http://127.0.0.1:8000/docs/
+Panel de Admin en: http://127.0.0.1:8000/admin/
+    credenciales del admin: 
+        username: 'admin', password: 'back9878'
+
 
 ### 2️⃣ Frontend (Next.js)
 
@@ -51,6 +53,10 @@ npm run dev
 ```
 
 El frontend estará disponible en: **http://localhost:3000**
+
+    credenciales de administracion del frontend:
+        username: 'admin', password: 'admin123' 
+        username: 'manager', password: 'manager123' 
 
 ---
 
