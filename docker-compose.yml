@@ -1,6 +1,6 @@
-version: '3.8'
 
 services:
+  # BASE DE DATOS POSTGRES
   db:
     image: postgres:15-alpine
     container_name: beer_tap_db
@@ -12,6 +12,43 @@ services:
       - POSTGRES_PASSWORD=beertap_password
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U beertap_user -d beertap_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # BACKEND (DJANGO API)
+  backend:
+    build: ./backend
+    container_name: beer_tap_backend
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_NAME=beertap_db
+      - DB_USER=beertap_user
+      - DB_PASSWORD=beertap_password
+      - DB_HOST=db  # Apunta al servicio 'db' de arriba, no a localhost
+      - DB_PORT=5432
+    depends_on:
+      db:
+        condition: service_healthy # No arranca Django hasta que Postgres esté 100% listo para recibir conexiones
+
+  # 3. FRONTEND (NEXT.JS)
+  frontend:
+    build: ./frontend
+    container_name: beer_tap_frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # Evita que los node_modules locales pisen los del contenedor
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000 # El navegador del seguirá apuntando a localhost:8000 para la API
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:

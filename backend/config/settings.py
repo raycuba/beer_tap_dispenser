@@ -96,7 +96,7 @@ DATABASES = {
         'USER': os.environ.get('DB_USER', 'beertap_user'),
         'PASSWORD': os.environ.get('DB_PASSWORD', 'beertap_password'),
         'HOST': os.environ.get('DB_HOST', 'localhost'),  # 'db' cuando corre en Docker, 'localhost' si lo corres local
-        'PORT': '5432',
+        'PORT': os.environ.get('DB_PORT', '5432'), # Lee el puerto de las variables de entorno, o usa '5432' por defecto
     }
 }
 

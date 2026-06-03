@@ -1,7 +1,7 @@
 # 🍺 Beer Tap Dispenser - Guía de Inicio
 
 ## Requisitos previos
-- **Backend**: Python 3.8.12, Django
+- **Backend**: Python 3.12.8, Django
 - **Frontend**: Node.js 18+, npm/yarn
 - **Base de datos**: postgres:15-alpine (incluida)
 
@@ -60,7 +60,36 @@ El frontend estará disponible en: **http://localhost:3000**
 
 ---
 
-## 🔍 Solución de problemas
+### INICIAR EL SERVIDOR DESDE DOCKER: ----------------------------------------------------------------------------------------------
+Asegúrate de apagar cualquier proceso local de Django, Next o Postgres que tengas corriendo en tu máquina para liberar los puertos.
+
+## Ve a la raíz del proyecto y ejecuta:
+Bash
+docker-compose up --build
+
+## Una vez que veas en los logs que los tres contenedores están activos:
+abre otra terminal y ejecuta las migraciones dentro del contenedor de Django para poblar las tablas por primera vez:
+
+Bash
+docker-compose exec backend python manage.py migrate
+
+## Para crear una contraseña para acceder al admin del backend:
+abre otra terminal y ejecuta 
+
+Bash 
+docker-compose exec backend python manage.py createsuperuser
+
+
+¡Y listo! Al abrir http://localhost:3000 tendrás tu Next.js controlando el backend de Django, guardando todo en el Postgres aislado. 
+
+Acceso a las aplicaciones:
+
+    Frontend (Dashboard): http://localhost:3000
+
+    Backend (API REST): http://localhost:8000/docs/
+    Backend (ADMIN): http://127.0.0.1:8000/admin/
+
+## 🔍 Solución de problemas -----------------------------------------------------------------------------------------------------------------
 
 ### ❌ "Cargando grifos..." infinito
 
@@ -126,6 +155,19 @@ npm start
 ```
 
 ---
+
+### Reiniciar todo el proyecto:
+Limpiar solo este proyecto (La más recomendada)
+Si solo quieres reiniciar el dispenser de cerveza sin afectar a otros proyectos de Docker que tengas en tu ordenador, 
+ejecuta este comando en la raíz (donde está el docker-compose.yml):
+
+    Bash
+    docker-compose down -v --rmi all
+
+    ¿Qué hace exactamente este comando?
+        down: Detiene y elimina los contenedores y la red virtual del proyecto.
+        -v (o --volumes): Borra el volumen de PostgreSQL. Esto destruirá los datos de las tablas para que la base de datos comience totalmente vacía.
+        --rmi all: Elimina las imágenes locales que se compilaron para el backend y el frontend. Así forzarás a Docker a reinstalar el requirements.txt y el package.json desde cero la próxima vez.
 
 ## 📝 Notas importantes
 
